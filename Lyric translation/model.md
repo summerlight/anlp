@@ -77,8 +77,13 @@ This contains lyrics for new english songs which we can use for testing
 
 ##References and Related Works
 * [Machine Translation](http://research.microsoft.com/en-us/projects/mt/)
-* [Statistical Dependency Graph](http://research.microsoft.com/pubs/68973/stat_mt_dependency_graph_tmi_camera_ready.pdf/)
+* [Statistical Dependency Graph](http://research.microsoft.com/pubs/68973/stat_mt_dependency_graph_tmi_camera_ready.pdf)
 * [Word Alignment](http://research.microsoft.com/pubs/68848/acl-2001-alignment.doc)
 * [Decision Trees](http://research.microsoft.com/pubs/68909/amta-decision-trees.doc)
 * [Sentence Training](http://research.microsoft.com/pubs/68968/conf_lrec2004.pdf)
 * [Cross Lingual Semantic Relateness](http://web.eecs.umich.edu/~mihalcea/downloads.html#CROSS_LIN_SEM_REL)
+* [Condition Random Fields](http://pages.cs.wisc.edu/~jerryzhu/cs838/CRF.pdf)
+* [Fast Artifical Neural Network Library](http://leenissen.dk/fann/wp/)
+* [Orange biolab](http://orange.biolab.si/)
+* [Implementing Neural Network from Stratch](http://www.wildml.com/2015/09/implementing-a-neural-network-from-scratch/)
+* [Deep Learning](http://deeplearning.net/software/theano/)
