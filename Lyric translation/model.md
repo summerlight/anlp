@@ -49,7 +49,7 @@ Rule-Based MT					                    |   Statistical MT
 – High development and customization costs|  + Rapid and cost-effective development costs provided the required corpus exists
 
 ##Evaluation
-The evaluation od the system would depend on the accuracy of the translation betwen the source and the target language
+The evaluation of the system would depend on the accuracy of the translation betwen the source and the target language
 
 ##Data set for learning and patch testing
 Currently there is a manual site where lingustic expert trans lyrics from one language to another. 
