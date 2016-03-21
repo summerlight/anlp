@@ -12,7 +12,7 @@ Word sense disambiguation is another possible approach which might be a good sta
 An average lyrics would have so many redundant words and sentences which would not be good approach to indicate a strong mapping between bilingual corpus.
 
 ##Method
-Machine translation (MT) is automated translation. It is the process by which computer software is used to translate a text from one natural language (such as English) to another (such as Spanish).
+Machine translation (MT) is automated translation process by which computer software is used to translate a text from one natural language (such as English) to another (such as Spanish).
 Translation is not a mere word-for-word substitution. A translator must interpret and analyze all of the elements in the text and know how each word may influence another.
 
 There are two methods of approaching the problem.
