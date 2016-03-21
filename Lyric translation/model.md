@@ -55,14 +55,17 @@ There will be mainly two operations
 * Translating the data.
 
 Since we would create a patch (development set) to test the model and also verify the translated text in the output. It would be a generative model.
-1.	Split the text into sentence separated by punctuation such as [(),.] for both the languages
-2.	Extract the word from the sentences
-3.	Do the PoS tagging
-4.	Build the word tree and mapping from one language to another.
-5.	Estimate the probabilities of the words and return the data.
+* Split the text into sentence separated by punctuation such as [(),.] for both the languages
+* Extract the word from the sentences
+* Do the PoS tagging
+* Build the word tree and mapping from one language to another.
+* Estimate the probabilities of the words and return the data.
 
-##Evaluation
-The evaluation of the system would depend on the accuracy of the translation betwen the source and the target language
+##Evaluation Metric
+####Baseline Metric
+The baseline metric would be word to word conversion from one language to another
+####Upper bound Metric
+The upper bound metric would be to closely match the manually translated lyrics.
 
 ##Data set for learning and patch testing
 Currently there is a manual site where lingustic expert trans lyrics from one language to another. 
