@@ -16,8 +16,8 @@ Machine translation (MT) is automated translation. It is the process by which co
 Translation is not a mere word-for-word substitution. A translator must interpret and analyze all of the elements in the text and know how each word may influence another.
 
 There are two methods of approaching the problem.
-*Rule-Based Machine Translation
-*Statistical Machine Translation
+* Rule-Based Machine Translation
+* Statistical Machine Translation
 
 
 In a rule based MT system, we would achieve the following using
