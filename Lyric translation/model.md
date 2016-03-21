@@ -48,6 +48,19 @@ Rule-Based MT					                    |   Statistical MT
 – Hard to handle exceptions to rules		  |   + Good for catching exceptions to rules
 – High development and customization costs|  + Rapid and cost-effective development costs provided the required corpus exists
 
+##Brief Implementation Steps
+For the purpose of the project we will go with stochastic model as it is better in terms to fluency and cost-effective development.
+There will be mainly two operations
+* Training the model 
+* Translating the data.
+
+Since we would create a patch (development set) to test the model and also verify the translated text in the output. It would be a generative model.
+1.	Split the text into sentence separated by punctuation such as [(),.] for both the languages
+2.	Extract the word from the sentences
+3.	Do the PoS tagging
+4.	Build the word tree and mapping from one language to another.
+5.	Estimate the probabilities of the words and return the data.
+
 ##Evaluation
 The evaluation of the system would depend on the accuracy of the translation betwen the source and the target language
 
