@@ -19,7 +19,9 @@
   1. Implement LDA and test it on the corpus
   1. Develop (or apply existing) a method to encode graph information into LDA framework : This will be our own contribution.
   1. Compare the result
+
   One of the ideas for encoding graph information is that a social network contains variety of communities, and we expect that there should be correlation between each community and a topic distribution. If we can cluster a social network by communities and develop a method that represent this intuition as a prior knowledge, we could apply a different (and hopefully more accurate) model to each text, depending on the context.
+  
   Note that detailed methodology could be drastically changed during this project. For instance, Latent Semantic Indexing is another valid candidate for this research. We choose LDA because there are more resources and researchs out there on the internet. 
 
 ## Evaluation
