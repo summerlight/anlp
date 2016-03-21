@@ -19,10 +19,9 @@ A possible evaluation is that some team members go through the script in target 
 
 ## Data set
 
-The data we like to transcribe could be from some corpus collecting sentences and words in journal, newspapers and academic conversations: [example][1].
+The data we like to transcribe could be from some corpus collecting sentences and words in journal, newspapers and academic conversations: [example](http://corpus.byu.edu/).
 
 ## Related works
   * [Automatic Alignment and Analysis of Linguistic Change - Transcription Guidelines](http://fave.ling.upenn.edu/downloads/Transcription_guidelines_FAAV.pdf)
-  * [1](http://corpus.byu.edu/)
   * [The ESTER 2 Evaluation Campaign for the Rich Transcription of French Radio Broadcasts](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.332.3734&rep=rep1&type=pdf)
   * [Steps in Doing a Transcription](http://www.kcl.ac.uk/sspp/departments/education/research/ldc/knowledge-transfer/DATA/part3.pdf)
