@@ -22,15 +22,15 @@ There are two methods of approaching the problem.
 
 In a rule based MT system, we would achieve the following using
 Steps:
-1. Parsing the text and create a transistional representation from which the text in the target language is generated.
-2. Learn rule sets and transfer the grammatical structure of the source language into the target language.
-3. Create vocabulary and linguistic rules.
+* Parsing the text and create a transistional representation from which the text in the target language is generated.
+* Learn rule sets and transfer the grammatical structure of the source language into the target language.
+* Create vocabulary and linguistic rules.
 
 A statistical MT system spans across different fields,
-1. Syntax-Based SMT
-2. Phrase-Based SMT
-3. Word Alignment
-4. Language Modeling
+* Syntax-Based SMT
+* Phrase-Based SMT
+* Word Alignment
+* Language Modeling
 
 An example of such model would be as represented in the diagram 
 * http://research.microsoft.com/en-us/projects/mt/msrmt1.gif
