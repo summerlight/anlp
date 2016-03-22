@@ -74,6 +74,10 @@ Since we would create a patch (development set) to test the model and also verif
 * Estimate the probabilities of the words and return the data.
   * Using CRF, HMM models to create the transistion probabilites of words and check the phrases using sliding window approach while parsing the data. We would do a lexicon translation.
 
+Some Packages for data processing cal be found in 
+* [Standford NLP Trrebank](http://www-nlp.stanford.edu/links/statnlp.html#Treebanks)
+* [Statistical NLP](http://www-nlp.stanford.edu/links/statnlp.html)
+
 ##Evaluation Metric
 ####Baseline Metric
 The baseline metric would be word to word conversion from one language to another
