@@ -33,8 +33,8 @@ A statistical MT system spans across different fields,
 * Language Modeling
 
 An example of such model would be as represented in the diagram 
-* http://research.microsoft.com/en-us/projects/mt/msrmt1.gif
-* http://research.microsoft.com/en-us/projects/mt/msrmt2.gif
+* [Learning Process](http://research.microsoft.com/en-us/projects/mt/msrmt1.gif)
+* [Runtime Process](http://research.microsoft.com/en-us/projects/mt/msrmt2.gif)
 
 ####Highlighting the positive and negatives
 Rule-Based MT					                    |   Statistical MT
@@ -75,7 +75,7 @@ Since we would create a patch (development set) to test the model and also verif
   * Using CRF, HMM models to create the transistion probabilites of words and check the phrases using sliding window approach while parsing the data. We would do a lexicon translation.
 
 Some Packages for data processing cal be found in 
-* [Standford NLP Trrebank](http://www-nlp.stanford.edu/links/statnlp.html#Treebanks)
+* [Standford NLP Treebank](http://www-nlp.stanford.edu/links/statnlp.html#Treebanks)
 * [Statistical NLP](http://www-nlp.stanford.edu/links/statnlp.html)
 
 ##Evaluation Metric
