@@ -1,4 +1,4 @@
-#Lyric Translation using Machine Translation Stochatic Model
+#Lyric Translation using Machine Translation (Stochatic Model)
 ##Motivation
 In the constantly connected world where more people are listening to music of different genre and mostly in different languages. There is a need for translating lyrics into users language to increase the user perception of meaning in the song. An example for such a song would be the K-Pop hit Gangum Style, though was a great hit in the music market, people did not understand the lyrics of the song is. What if they was a way to convert the lyrics which are in English to other languages and vice versa.
 
