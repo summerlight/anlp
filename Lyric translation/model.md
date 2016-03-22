@@ -14,6 +14,9 @@ An average lyrics would have so many redundant words and sentences which would n
 ##Method
 
 [Neural Machine translation](http://arxiv.org/pdf/1409.0473v6.pdf) is automated translation process by which computer software is used to translate a text from one natural language (such as English) to another (such as Spanish).
+
+[Neural Machine Translation using LISA](http://104.131.78.120/)
+
 An example [machine translation paper from English to Japanese](https://cs224d.stanford.edu/reports/GreensteinEric.pdf)
 Translation is not a mere word-for-word substitution. A translator must interpret and analyze all of the elements in the text and know how each word may influence another.
 
