@@ -26,6 +26,7 @@ A possible evaluation is that some team members go through the script in target 
 The above might be considered as too subjective so that it's not a good evaluation metric. A more objective metric could be that comparing IPA for each pair of word and corresponding scripts. More similar they are, more successful the method is.
 
 Baseline: 
+The script is assigned by choosing the smallest edit distance of IPA
 
 ## Data set
 ### General Corpus
