@@ -12,7 +12,9 @@ Word sense disambiguation is another possible approach which might be a good sta
 An average lyrics would have so many redundant words and sentences which would not be good approach to indicate a strong mapping between bilingual corpus.
 
 ##Method
-Machine translation (MT) is automated translation process by which computer software is used to translate a text from one natural language (such as English) to another (such as Spanish).
+
+[Neural Machine translation](http://arxiv.org/pdf/1409.0473v6.pdf) is automated translation process by which computer software is used to translate a text from one natural language (such as English) to another (such as Spanish).
+An example [machine translation paper from English to Japanese](https://cs224d.stanford.edu/reports/GreensteinEric.pdf)
 Translation is not a mere word-for-word substitution. A translator must interpret and analyze all of the elements in the text and know how each word may influence another.
 
 There are two methods of approaching the problem.
@@ -85,6 +87,12 @@ The baseline metric would be word to word conversion from one language to anothe
 The upper bound metric would be to closely match the manually translated lyrics.
 
 ##Data set for learning and patch testing
+The corpus for each language can be got from this site
+* [Corpus](http://corpus.byu.edu/)
+* [N-Grams](http://www.ngrams.info/)
+* [Stanford NLP English Corpus](http://www-nlp.stanford.edu/links/statnlp.html)
+* [Wiki corpus](http://www.cs.upc.edu/~nlp/wikicorpus/) 
+
 Currently there is a manual site where lingustic expert trans lyrics from one language to another. 
 * [Lyric Translate](lyricstranslate.com)
 It has about 38000 articles and would be good source of training and development set.
