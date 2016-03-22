@@ -14,13 +14,16 @@ Most transcription applications are talking about speech to text. We saw an appl
 
 ## Method
 
-1. get pronunciation/audio/waveform/phoneme for each word from corpus(see Dataset)
-2. compare the waveform with that of target language for every phoneme
-3. assign word or character which has highest similarity
+1. ~~get pronunciation/audio/waveform/phoneme for each word from corpus(see Dataset)~~
+2. look up phoneme corpus and get phonemes for every single word
+2. compare phoneme with that of target language for each phoneme
+3. assign word or character which has highest similarity 
 
 ## Evaluation
 
 A possible evaluation is that some team members go through the script in target language and give a score on how similar does it sound like in both language. Therefore, we might both have to know source language and target language or we compare the sound pronunced by some applications, such as Google Translate.
+
+The above might be considered as too subjective so that it's not a good evaluation metric. A more objective metric could be that comparing IPA for each pair of word and corresponding scripts. More similar they are, more successful the method is.
 
 Baseline: 
 
