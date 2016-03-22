@@ -30,8 +30,10 @@ The data we like to transcribe could be from some corpus collecting sentences an
 
 ### Phoneme Corpus
 The corpus are all in English so far.
+
 [TIMIT Acoustic-Phonetic Continuous Speech Corpus](https://catalog.ldc.upenn.edu/LDC93S1):
 time-aligned orthographic, phonetic and word transcriptions as well as a 16-bit, 16kHz speech waveform file for each utterance
+
 [CMU Pronouncing Dictionary](http://www.speech.cs.cmu.edu/cgi-bin/cmudict):
 contains over 134,000 words and their pronunciations
 
