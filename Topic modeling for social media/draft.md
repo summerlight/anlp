@@ -33,7 +33,9 @@ Topic models are known to be a hard problem to evaluate. This problem could be e
   * Since we want to use not only the text, but also its context. This effectively invalidates many assumptions made by typical evaluation methods.
   * Our data set won't have annotations. Hence, evaluation should involve a certain amount of human intervention.
 
-Our initial search for a good evaluation method does not yield easy results for our purpose. In the worst case, manual evaluation is inevitable, then we will sample thousands of tweets and see if they made sense. Or if we can give up genericity, since "Like"s or "Retweet"s of a certain user/community could be a good indicator for their interest, we can use them to build our own evaluation metric.
+Our initial search for a good evaluation method does not yield easy results for our purpose. In the worst case, manual evaluation is inevitable, then we will sample thousands of tweets and see if the assigned model made sense.
+
+Or if we can give up genericity, since "Like"s or "Retweet"s of a certain user/community could be a good indicator for their interest, we can use them to build our own evaluation metric. Although we do not have a concrete idea for this way yet, the problem definition could be changed in this case, like "Prediction/recommendation of tweets using social-relation sensitive topic modeling"
 
 A baseline will be a naive application of LDA algorithm to the same data set, which is unaware of social relationships.
 
