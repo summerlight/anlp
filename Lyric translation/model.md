@@ -109,3 +109,4 @@ This contains lyrics for new english songs which we can use for testing
 * [WordNet](http://wordnet.princeton.edu/)
 * [Standford NLP Treebank](http://www-nlp.stanford.edu/links/statnlp.html#Treebanks)
 * [Statistical NLP](http://www-nlp.stanford.edu/links/statnlp.html)
+* [Rule Based Statistical Translation](http://nparc.cisti-icist.nrc-cnrc.gc.ca/npsi/ctrl?action=rtdoc&an=9061555)
