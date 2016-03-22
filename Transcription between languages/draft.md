@@ -5,8 +5,8 @@ Learning second language has become a trend in the world. It's difficult for sec
 
 ## Problem Definition
 
-* Input: Words, sentences, paragraphs or articles from corpus in source language.
-* Output: Scripts that are very similar to the sound of input in target language. Note that the output have to follow the orthography of the target language. 
+  * Input: Words, sentences, paragraphs or articles from corpus in source language.
+  * Output: Scripts that are very similar to the sound of input in target language. Note that the output have to follow the orthography of the target language. 
 
 ## Existing applications
 
