@@ -87,3 +87,5 @@ This contains lyrics for new english songs which we can use for testing
 * [Orange biolab](http://orange.biolab.si/)
 * [Implementing Neural Network from Stratch](http://www.wildml.com/2015/09/implementing-a-neural-network-from-scratch/)
 * [Deep Learning](http://deeplearning.net/software/theano/)
+* [NLTK](http://www.nltk.org/nltk_data/)
+* [WordNet](http://wordnet.princeton.edu/)
