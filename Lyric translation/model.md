@@ -55,11 +55,24 @@ There will be mainly two operations
 * Translating the data.
 
 Since we would create a patch (development set) to test the model and also verify the translated text in the output. It would be a generative model.
+```
+ from nltk.corpus import wordnet
+ from nltk.corpus import brown
+ from nltk.corpus import reader.semcor 
+```
+
 * Split the text into sentence separated by punctuation such as [(),.] for both the languages
+  * The feature that we take where is a sentence which is line break or comma (,) 
 * Extract the word from the sentences
+  * The extraction of the word would be used as a feature for a class
 * Do the PoS tagging
+  * Do the part of speech tagging using semcor module in the nltk package
+* Reduce the word to the stem words
+  * The stem words can be got by using wordnet module in the nltk package
 * Build the word tree and mapping from one language to another.
+  * The word tree can be built using the TIMIT identifier [TIMIT](http://www.nltk.org/book/ch11.html)
 * Estimate the probabilities of the words and return the data.
+  * Using CRF, HMM models to create the transistion probabilites of words and check the phrases using sliding window approach while parsing the data. We would do a lexicon translation.
 
 ##Evaluation Metric
 ####Baseline Metric
