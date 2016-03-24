@@ -4,7 +4,7 @@
 | Name                      | USC ID     | USC e-mail       |
 |---------------------------|------------|------------------|
 | Minchul Park              | 8210695817 | minchulp@usc.edu |
-| Meng-Yu Chung             |            | mengyuch@usc.edu |
+| Meng-Yu Chung             | 9208398418 | mengyuch@usc.edu |
 | Nithin Chandrashekhar     |            | nithinch@usc.edu |
 | Samual Krish Ravichandran |            | samualkr@usc.edu |
 
