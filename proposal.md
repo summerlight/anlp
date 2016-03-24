@@ -6,7 +6,7 @@
 | Minchul Park              | 8210695817 | minchulp@usc.edu |
 | Meng-Yu Chung             | 9208398418 | mengyuch@usc.edu |
 | Nithin Chandrashekhar     |            | nithinch@usc.edu |
-| Samual Krish Ravichandran |            | samualkr@usc.edu |
+| Samual Krish Ravichandran | 6334599483 | samualkr@usc.edu |
 
 ## Introduction
 
