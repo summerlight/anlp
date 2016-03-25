@@ -12,6 +12,7 @@ It is known that a performance of language identification can be degraded on som
 1. Reduce the amount of training data.
 1. Reduce the length of the documents. (split by sentence/paragraph)
 1. Make it independent to character encodings
+1. Add new language/dialects (ex. Klingon, Quenya ...)
 
 Define different classes (languages) based on the training corpus.
 
