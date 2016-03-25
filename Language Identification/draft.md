@@ -29,11 +29,15 @@ Also, we will try both ways with encoding-aware features and without it. It will
 Identifying a corpus to belong to a specific language is a hard task. The reason is that many languages like hindi and sanskrit have similar character set. So, if we have a corpus to identify to which language it belongs, we might have the option of classifying it to a language set rather than a specific language.
 
 But thanks to Wikipedia, we have annotated corpus. Hence, evaluation can be done mechanically. The metric will be a precision/recall for each language. If our method works as expected, then the classification performance for confusing languages should be improved.
+
+Moreover, to make the problem challenging, we can gradually introduce new languages or dialects. For instance, there are a number of dialects in Korean,  In this way, we can also test the flexibility of our classifier, not only its performance.
   
 ## Data set
 There are many datasets available for different languages in the internet. Take the data from wikipedia as it supports many languages. The language identification task will depend on the depth of content these datasets will have.
 
 One specific example is Wikipedia, which provides a dataset that consists of 50 languages. In order to make this problem interesting, we will split each document by sentence/paragraph in order to yield shorter documents. We believe that with this number of languages and shorter length of documents, this problem provides sufficient amount of ambiguity that we need.
+
+Moreover, there are lots of dialect resources that we could use. National Institute of the Korean Language provides a dataset of Korean dialects, and [List of freely available Arabic corpora](http://www.qatar.cmu.edu/~wajdiz/corpora.html) contains some multi-dialect corpus. We expect that introduction of these datasets will give us incremental challenges if our time allows.
 
 ## Related works
   * [Language Identification: The Long and the Short of the Matter](http://www.aclweb.org/anthology/N10-1027)
