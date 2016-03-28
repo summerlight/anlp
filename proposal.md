@@ -42,7 +42,7 @@ There can be two possible consequences. If the basic implementation is good enou
  * Unsupervised training
  * Experimenting our system on language dialects or code switching datasets
  
-Otherwise, we will focus on improving our system by better feature engineering, finding better modeling, ensemble methods, etc. One idea is layered classification. The motivation here is that there should be sets of closely related, or confusing languages, and we can identify such sets by (possibly monoligual) LID. Hence, we identify spans of a potential language set first, then identify actual language spans with more sophisticated, language-specific features. This approach is natural since it can reflect usual abstraction layers for text representation like character set, vocabulary, morphology. 
+Otherwise, we will focus on improving our system by better feature engineering, finding better modeling, ensemble methods, etc. One idea is layered identification. The motivation here is that there should be sets of closely related, or confusing languages, and we can identify such sets by (possibly monoligual) LID. Hence, we identify spans of a potential language set with greater accuracy first, then identify actual language spans with more sophisticated, language-specific features. This approach is natural since it can reflect usual abstraction layers for text representation like character set, vocabulary, morphology. 
 
 ### Evaluation
 
