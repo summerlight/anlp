@@ -1,4 +1,4 @@
-# Language identification of multi-lingual documents
+# Hierarchical Language identification of multilingual documents
 
 ## Team 11, AlphaDogs
 | Name                      | USC ID     | USC e-mail       |
@@ -10,43 +10,42 @@
 
 ## Introduction
 
-While language identification(LID) is a well-studied problem, LID of multilingual documents still remains as an open problem. [Linguini][1] is the first known work that tackles this topic by giving proportion of languages. [Hughes et al. (2006)][2] proposed several challenges for LID, including multilingual documents. While many of previous works on multilingual LID are done in a document level[1][1][3][3][4][4], there have been several attempts on identifying multiple languages in a fine-grained way[5][5][6][6].
+Translation engines identify language and then try to translate the source to a target language. Language identification(LID) plays a key part in the machine translation so that accurate translation can be made. The problem that we are addressing is the language which have different root like for example, Burmese (wa) will be identified as French (in Google Translate), Aragonese (sq) is a Roman language which will be identified as Spanish. The root of these language diverge from the original script in which it is listed. The problem at hand is to take into account the similarity between languages and the different language root that the language sub divides into, if we could create a probabilistic approach to find all closest relative to a language and find the optimal match in terms of vocabulary and sentence construction might result in better LID.
 
-Here, our problem formulation is a fine-grained, word-level sequence labeling (and potentially identifying language segmentations). While this is a natural problem formulation, identifying exact spans of monolingual text can simplify many NLP tasks. For instance, indexing vocabularies of web documents usually depends on language-specific morphological transformation like stemming, therefore identifying a corresponding language of an indexed word is essential for this task.
+<del>While the below paragraph is too long, we're still required to put some references, and that our problem is a sequence labeling problem.</del>
+While LID is a well-studied problem, its application to multilingual documents still remains as an open problem. [Linguini][1] is the first known work that tackles this topic by giving proportion of languages. [Hughes et al. (2006)][2] proposed several challenges for LID, including multilingual documents. While many of previous works on multilingual LID are done in a document level[1][1][3][3][4][4], there have been several attempts on identifying multiple languages in a fine-grained way[5][5][6][6]. For for LID itself, our problem formulation is a fine-grained, word-level sequence labeling (and potentially identifying language segmentations) for multilingual documents. The motivation is that identifying exact spans of monolingual texts can simplify many NLP tasks. 
 
 ## Method
 
 ### Materials
 
-Since there are no standard corpora for this task, we will use Wikipedia corpus to construct multilingual documents from monolingual sentences. This corpus contains about 200gb of text data, more than 100 languages, which should be sufficient for our purpose.
-
-To be specific, several real-world scenarios are in our consideration for dataset construction:
-
- * By structure - concatenation of short sentences, foreign words in a sentence, foreign sentences in a paragraph
- * By language - choosing randomly, choosing among closely related languages
- * By contents - sentences from same topic but different languages (Wikipedia provides this data)
-
-Currently, we plan to enumerate every possible configuration for data generation. 
+Our task will be based on the [ALTA-2010 Shared Task][ALTA-2010] dataset. This dataset contains multilingual texts for 74 languages, mixtures of comparable monolingual documents. Generating more data/annotations on demand should be possible by following a same methodology.
 
 ### Procedure
 
-As there are not many works done before for this problem, we will try several standard methods for a sequence labeling problem, such as [linear-chain CRFs][7], [structured SVM][8] and/or [LSTM RNN][9]. In this case, we think character, word, N-grams would be all valid features.
+We will build a starting point from several standard methods for a sequence labeling problem, such as [linear-chain CRFs][7], [structured SVM][8] and/or [LSTM RNN][9]. In this case, we think character, word, N-grams would be all valid features.
 
 Python has a plentiful number of implementation of those machine learning algorithms. [PyStruct][10] supports CRFs and structured SVM and [CRF++][11] provides a framework for CRFs. [Theano][12] is a powerful tool for implementing RNN by exploiting GPGPU power.
 
-There can be two possible consequences. If the basic implementation is good enough and our schedule allows, then we will tackle other challenges including those proposed by [Hughes et al. (2006)][2]:
+Based on a basic LID, we can try to find confusing languages in a systematic fashion:
 
- * Open class LID, or identifying unknown language
- * Training from sparse datasets
- * Include more minor languages
- * Unsupervised training
- * Experimenting our system on language dialects or code switching datasets
- 
-Otherwise, we will focus on improving our system by better feature engineering, finding better modeling, ensemble methods, etc. One idea is layered identification. The motivation here is that there should be sets of closely related, or confusing languages, and we can identify such sets by (possibly monoligual) LID. Hence, we identify spans of a potential language set with greater accuracy first, then identify actual language spans with more sophisticated, language-specific features. This approach is natural since it can reflect usual abstraction layers for text representation like character set, vocabulary, morphology. 
+ * Apply LID to build an error-rate matrix between languages
+ * Build a weighted graph with a language as a vertex, an error rate between two languages as an edge.
+ * Partition the graph to determine confusing language sets.
+
+Once we have partitioned sets, LID with more optimized features could be applied for each set. We expect that many generic features could be shared, while more language specific features still can be introduced. Potential features will include code points, word, N-gram, morphology, ... etc. Ideally, potential configurations for given a set of methods/features could be automatically experimented, then some ideal configuration for the task could be chosen.
+
+<del> I just put the below arguments but 500-word limitation is quite severe, so it might need to be deleted.</del>
+By this means, we're expecting below benefits:
+
+ * Breaking down a hard problem (LID with 100~ languages) into smaller, modularized problems.
+ * We can easily experiment very specific features without a fear of degrading entire system's performance.
+ * This approach naturally maps to usual abstractions for textual representations.
+ * This approach allows us to replace a LID for specific languages, if drop-in replacement with better performance exists.
 
 ### Evaluation
 
-For evaluation, we will measure word-level F1 scores. A baseline method will be a simple dictionary lookup based on word counting.
+For evaluation, we will measure averages of word-level F1 scores for each language. A baseline method will be a simple dictionary lookup based on word counting.
 
 ## References cited
 
@@ -62,6 +61,7 @@ For evaluation, we will measure word-level F1 scores. A baseline method will be 
 [10]: https://pystruct.github.io/ "PyStruct - Structured Learning in Python"
 [11]: https://taku910.github.io/crfpp/ "CRF++: Yet Another CRF toolkit"
 [12]: https://github.com/Theano/Theano "Theano"
+[ALTA2010]: http://aclweb.org/anthology/U/U10/U10-1003.pdf "ALTA-2010 Shared Task"
 
 ## Division of labor between the teammates
 
