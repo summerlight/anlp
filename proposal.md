@@ -23,7 +23,7 @@ Our task will be based on the [ALTA-2010 Shared Task][ALTA-2010] dataset. This d
 
 ### Procedure
 
-We will build a starting point from several standard methods for a sequence labeling problem, such as [linear-chain CRFs][7], [structured SVM][8] and/or [LSTM RNN][9]. In this case, we think character, word, N-grams would be all valid features.
+We will build a starting point from several standard methods for a sequence labeling problem, such as [linear-chain CRFs][7], [structured SVM][8] and/or [LSTM RNN][9]. In this case, we think character, word, N-grams would be all valid features. Currently we might suggest three taxonomy feature strong, moderate, weak.
 
 Python has a plentiful number of implementation of those machine learning algorithms. [PyStruct][10] supports CRFs and structured SVM and [CRF++][11] provides a framework for CRFs. [Theano][12] is a powerful tool for implementing RNN by exploiting GPGPU power.
 
