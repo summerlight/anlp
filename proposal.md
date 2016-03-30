@@ -14,7 +14,7 @@ Language identification(LID) plays a key part in many NLP tasks that require lin
 
 Our approach is to find those similar language groups in a systematic way by LID and gradually specialize identifiers to each language group by taking specific linguistic knowledge into account. This allows us to break down a hard problem of LID with more than 100 languages into small modularized problems and incrementally improve the overall performance with ease.
 
-Meanwhile, multilingual documents make the problem complicated. Previous works on multilingual identification are done mostly on a document level[1][1][2][2] and there have been only a few attempts on identifying multiple languages in a fine-grained way[3][3][4][4]. As our approach requires exact spans of each language, we will treat it as a sequence-labeling problem.
+Meanwhile, multilingual documents make the problem complicated. Previous works on multilingual identification are done mostly on a document level[1][1][2][2] and there have been only a few attempts at identifying multiple languages in a fine-grained way[3][3][4][4]. As our approach requires exact spans of each language, we will treat it as a sequence-labeling problem.
 
 ## Method
 
@@ -30,9 +30,9 @@ We will build a basic identifier from several standard methods for a sequence la
  * Build a weighted graph using error rates between two languages as weight values.
  * Partition the graph to determine similar language sets.
 
-Once similar language sets are achieved, we can repeatedly try LID with advanced features and categorize similar languages until narrowing down to one answer. We cannot assume that all languages in a document are in a same group; it is one reason of this being a sequence labeling problem. 
+Once similar language sets are achieved, we can repeatedly try LID with advanced features and categorize similar languages until narrowing down to one answer. We cannot assume that all languages in a document are in the same group; it is one reason of this being a sequence labeling problem. 
 
-We expect that many generic features (like characters, words, N-grams, etc.) can be shared among identifiers, while language specific features can also be introduced. Furthermore, an ideal configuration for a given set of features could be automatically derived by enumerating possible state space.
+We expect that many generic features (like characters, words, N-grams, etc.) can be shared among identifiers while language specific features can also be introduced. Furthermore, an ideal configuration for a given set of features could be automatically derived by enumerating possible state space.
 
 ### Evaluation
 
