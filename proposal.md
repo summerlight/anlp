@@ -20,9 +20,6 @@ By this means, we're expecting below benefits:
  * This approach naturally maps to usual abstractions for textual representations.
  * This approach allows us to replace a LID for specific languages, if drop-in replacement with better performance exists.
 
-<del>While the below paragraph is too long, we're still required to put some references, and that our problem is a sequence labeling problem.</del>
-While LID is a well-studied problem, its application to multilingual documents still remains as an open problem. [Linguini][1] is the first known work that tackles this topic by giving proportion of languages. [Hughes et al. (2006)][2] proposed several challenges for LID, including multilingual documents. While many of previous works on multilingual LID are done in a document level[1][1][3][3][4][4], there have been several attempts on identifying multiple languages in a fine-grained way[5][5][6][6]. For LID itself, our problem formulation is a fine-grained, word-level sequence labeling (and potentially identifying language segmentations) for multilingual documents. The motivation is that identifying exact spans of monolingual texts can simplify many NLP tasks. 
-
 ## Method
 
 ### Materials
