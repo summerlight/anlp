@@ -196,7 +196,7 @@ wiki_list = [
   ('//lrc.wikipedia.org/', 'lrc', 'لۊری شومالی'),
   ('//mai.wikipedia.org/', 'mai', 'मैथिली'),
   ('//mt.wikipedia.org/', 'mt', 'Malti'),
-  ('//zh-classical.wikipedia.org/', 'lzh', '文言'),
+  ('//zh-classical.wikipedia.org/', 'zh_classical', '文言'),
   ('//ty.wikipedia.org/', 'ty', 'Reo Mā’ohi'),
   ('//mi.wikipedia.org/', 'mi', 'Māori'),
   ('//xmf.wikipedia.org/', 'xmf', 'მარგალური'),
