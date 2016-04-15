@@ -12,13 +12,18 @@ from collections import defaultdict
 Every multilingual document is a sequence of language-annotated text segments
 as below:
 
-multi_doc = [
-    {'lang':'en',
-     'text':'Hello world!'},
-    {'lang':'fr',
-     'text':'Bonjour monde!'},
-    ...
-]
+multi_doc = {
+    'text': 'Hello world! Bonjour monde!'
+    'metadata': [
+        {'lang':'en',
+         'begin': 0,
+         'end': 12},
+        {'lang':'fr',
+         'begin': 13,
+         'end': 26},
+        ...
+    ]
+}
 
 which is 'Hello world!Bonjour monde!' in a raw text format. Note that we don't
 add any artificial padding between each segment. If we need it, then it should
@@ -57,8 +62,8 @@ def write_json(obj, file_path):
         json.dump(obj, f)
 
 
-def read_text(doc_info):
-    path = doc_info['doc_path']
+def read_text(doc_info, path):
+    path = os.path.join(path, doc_info['doc_path'])
     begin = doc_info['begin']
     end = doc_info['end']
     with open(path, 'rt') as f:
@@ -73,7 +78,7 @@ def iter_all_pairs(langs):
 
 
 # combine two texts by following ALTA-2010's methodology
-def combine_text(doc_tuple):
+def combine_half_by_half(doc_tuple):
     # we use only first of two texts here
     assert len(doc_tuple) >= 2
     l1 = doc_tuple[0][0]
@@ -87,18 +92,21 @@ def combine_text(doc_tuple):
 
     # split a document by half and concatnate
     # the first half of t1 and the second half of t2.
-    p1 = p1[len(p1) // 2:]
-    p2 = p2[:len(p2) // 2]
+    p1 = '\n'.join(p1[len(p1) // 2:])
+    p2 = '\n'.join(p2[:len(p2) // 2])
 
-    return [
-        {'lang': l1, 'text': '\n'.join(p1)},
-        {'lang': l2, 'text': '\n'.join(p2)},
-    ]
+    return {
+        'text': p1 + '\n' + p2,
+        'metadata': [
+            {'lang': l1, 'begin': 0, 'end': len(p1)},
+            {'lang': l2, 'begin': len(p1) + 1, 'end': len(p1) + len(p2) + 1},
+        ]
+    }
 
 
-def generate_documents(doc_infos, lang_selector, doc_generator):
+def generate_documents(doc_infos, path, lang_selector, doc_generator):
     texts = {
-        doc_info['lang']: read_text(doc_info) for doc_info in doc_infos
+        doc_info['lang']: read_text(doc_info, path) for doc_info in doc_infos
     }
     langs = [doc_info['lang'] for doc_info in doc_infos]
 
@@ -124,6 +132,7 @@ if __name__ == '__main__':
         # TODO: Actually, we don't want to generate all possible combinations
         #       but want to reflect actual distribution as ALTA-2010
         for annotated in generate_documents(doc_infos,
+                                            os.path.dirname(args.input_path),
                                             iter_all_pairs,
                                             combine_half_by_half):
             print(annotated)
