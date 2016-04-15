@@ -17,7 +17,7 @@ multi_doc = {
     'metadata': [
         {'lang':'en',
          'begin': 0,
-         'end': 12},
+         'end': 13},
         {'lang':'fr',
          'begin': 13,
          'end': 26},
