@@ -4,7 +4,7 @@ import re
 import sqlite3
 import argparse
 import traceback
-import index_db
+from . import index_db
 from itertools import islice, takewhile, count
 
 # directory structure related
@@ -42,6 +42,9 @@ def corpus_files_iter(root_path):
 def documents_in_file_iter(text):
     # Unfortunately, the output of wikiextractor is not a valid xml.
     # But this is still well-structured, so we just use regex to parse it
+    # TODO : I made a mistake here; begin and end should be byte offset,
+    #        rather than string offset. Currently we need to read the whole
+    #        file because of this reason.
     for i in doc_begin_regex.finditer(text):
         doc_id = int(i.group(1))
         url = i.group(2)
@@ -94,7 +97,7 @@ def build_database(root_path, db_path):
         c = conn.cursor()
         c.execute(index_db.drop_table)
         c.execute(index_db.create_table)
-        for i, docs in enumerate(split_every(
+        for i, docs in enumerate(split_every(from .
                                  all_documents_iter(root_path), chunk_size)):
             print("{}th insertion...".format(i * chunk_size))
             c.executemany(index_db.insert_data, docs)
