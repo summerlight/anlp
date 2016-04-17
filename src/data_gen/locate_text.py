@@ -1,7 +1,7 @@
 import sqlite3
 import argparse
 import json
-from . import index_db
+import index_db
 from collections import defaultdict
 
 

@@ -4,7 +4,7 @@ import random
 import json
 import os.path
 import itertools
-from . import segmentation
+import segmentation
 from collections import defaultdict
 
 '''
@@ -159,7 +159,7 @@ if __name__ == '__main__':
     parser.add_argument('--output', dest='output_path',
                         default='../../data/sentences/',
                         help='an output path for generated documents')
-    parser.add_argument('--doc_count', dest='doc_count',
+    parser.add_argument('--doc_count', dest='doc_count', type=int,
                         default=10000, help='Number of generated documents')
     args = parser.parse_args()
     input_dir = os.path.dirname(args.input_path)

@@ -4,7 +4,7 @@ import re
 import sqlite3
 import argparse
 import traceback
-from . import index_db
+import index_db
 from itertools import islice, takewhile, count
 
 # directory structure related
@@ -97,7 +97,7 @@ def build_database(root_path, db_path):
         c = conn.cursor()
         c.execute(index_db.drop_table)
         c.execute(index_db.create_table)
-        for i, docs in enumerate(split_every(from .
+        for i, docs in enumerate(split_every(
                                  all_documents_iter(root_path), chunk_size)):
             print("{}th insertion...".format(i * chunk_size))
             c.executemany(index_db.insert_data, docs)
