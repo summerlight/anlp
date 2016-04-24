@@ -44,6 +44,23 @@ format.
  - etc...
 '''
 
+# a languages set to filter out languages without enough articles
+lang_candidates = {
+'de', 'en', 'es', 'fr', 'it', 'nl', 'ja', 'pl', 'ru', 'ceb', 'sv', 'vi', 'war',
+# more than 100,000 pages
+'ar', 'az', 'bg', 'zh-min-nan', 'be', 'ca', 'cs', 'da', 'et', 'el', 'eo', 'eu',
+'fa', 'gl', 'ko', 'hy', 'hi', 'hr', 'id', 'he', 'ka', 'la', 'lt', 'hu', 'ms',
+'min', 'no', 'nn', 'ce', 'uz', 'pt', 'kk', 'ro', 'sk', 'sl', 'sr', 'sh', 'fi',
+'th', 'tr', 'uk', 'ur', 'vo', 'zh',
+# more than 10,000 pages
+'af', 'als', 'am', 'an', 'ast', 'bn', 'map-bms', 'ba', 'be-tarask', 'bpy',
+'bar', 'bs', 'br', 'cv', 'cy', 'fo', 'fy', 'ga', 'gd', 'gu', 'hsb', 'io', 'ia',
+'os', 'is', 'jv', 'kn', 'ht', 'ku', 'ckb', 'ky', 'mrj', 'lv', 'lb', 'li',
+'lmo', 'mk', 'mg', 'ml', 'mr', 'arz', 'mzn', 'mn', 'my', 'nah', 'new', 'ne',
+'nap', 'oc', 'or', 'pa', 'pnb', 'pms', 'nds', 'qu', 'sa', 'sah', 'sco', 'sq',
+'scn', 'si', 'su', 'sw', 'tl', 'ta', 'tt', 'te', 'tg', 'bug', 'vec', 'wa',
+'yi', 'yo', 'zh-yue', 'bat-smg'}
+
 # This script does not generate actual multilingual text files, but provides
 # some functionalities for generate dataset. This is because generating dataset
 # itself takes lots of running time and lots of space while we haven't fixed
@@ -120,7 +137,7 @@ def random_combinations(cnt, lang_cnt):
 def combine_sentences(doc_tuple):
     text = ''
     metadata = []
-    for _ in range(random.randrange(5, 10)):
+    for _ in range(random.randrange(10, 15)):
         doc = random.choice(doc_tuple)
         sentences = [st for st in segmentation.by_sentences(doc[1])
                      if len(st) > 10]
@@ -150,6 +167,16 @@ def generate_documents(location_infos, path, lang_selector, combiner):
             yield combiner(tuple((l, texts[l]) for l in lang_tuple))
 
 
+def refine_candidates(location_infos):
+    def refine_topic(doc_infos):
+        return [doc for doc in doc_infos if doc['lang'] in lang_candidates]
+
+    location_infos = [refine_topic(doc_infos) for doc_infos in location_infos]
+
+    # some topics are not indexed because of several reasons
+    return [l for l in location_infos if len(l) >= 20]
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Locate same topic texts over multiple languages.')
@@ -168,10 +195,10 @@ if __name__ == '__main__':
         location_infos = json.load(f)
 
     # some topics are not indexed because of several reasons
-    location_infos = [l for l in location_infos if len(l) >= 20]
+    location_infos = refine_candidates(location_infos)
     generator = generate_documents(location_infos,
                                    input_dir,
-                                   random_combinations(5, 3),
+                                   random_combinations(10, 3),
                                    combine_sentences)
 
     for idx, doc in itertools.islice(enumerate(generator), args.doc_count):
