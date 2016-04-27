@@ -25,16 +25,20 @@ for doc in train:
 
 scripts = sorted(scr_cnt.keys())
 
+
 # cosine similarity
 def dist_to_vector(dist, features):
     vector = np.array([dist.get(scr, 0) for scr in features])
     abs_dist = sqrt(np.square(vector).sum()) # precompute an absolute value
     return vector, abs_dist
 
+
+# don't need to be centroid calculation, using cosine similarity normailizes it
 def add_vectors(v1, v2):
     vector = v1[0] + v2[0]
     abs_dist = sqrt(np.square(vector).sum())
     return vector, abs_dist
+
 
 def cosine(a, b):
     abs_a = a[1]
@@ -43,11 +47,13 @@ def cosine(a, b):
 
     return dot / (abs_a * abs_b)
 
+
 def find_most_similar(vec1, lang_vectors):
     cosine_gen = ((l2, cosine(vec1, vec2)) \
                   for l2, vec2 in lang_vectors.items())
     max_kv = max(cosine_gen, key=lambda x: x[1])
     return max_kv
+
 
 # calculate lang to lang matrix
 def calc_similarity_matrix(lang_vectors):
@@ -59,6 +65,7 @@ def calc_similarity_matrix(lang_vectors):
             lang_similarity[l1][l2] = similarity
 
     return lang_similarity
+
 
 def calc_result_matrix(lang_vectors):
     result_matrix = defaultdict(lambda: defaultdict(int))
@@ -73,6 +80,7 @@ def calc_result_matrix(lang_vectors):
             result_matrix[l1][l2] += 1
     return result_matrix
 
+
 def calc_expected_error_rate(groups, result_matrix):
     correct = 0
     error = 0
@@ -84,7 +92,8 @@ def calc_expected_error_rate(groups, result_matrix):
                 error += cnt
     return error / (correct + error)
 
-# clustering
+
+# Agglomerative Clustering Algorithm
 def merge(vectors, groups, set1, set2):
     vec1 = vectors.pop(set1)
     vec2 = vectors.pop(set2)
@@ -94,6 +103,7 @@ def merge(vectors, groups, set1, set2):
     for i in merged_set:
         groups[i] = merged_set
 
+
 def iter_group_pair(group_vectors):
     groups = list(group_vectors.keys())
     for i in range(len(groups)):
@@ -101,6 +111,7 @@ def iter_group_pair(group_vectors):
             g1 = groups[i]
             g2 = groups[j]
             yield g1, g2
+
 
 def cluster_languages(lang_vectors, result_matrix):
     group_vectors = {frozenset({l}): vec for l, vec in lang_vectors.items()}
@@ -116,7 +127,7 @@ def cluster_languages(lang_vectors, result_matrix):
         merge(group_vectors, group_map, l1, l2)
         expected_error_rate = \
             calc_expected_error_rate(group_map, result_matrix)
-        #print(lang_similarity[l1][l2], expected_error_rate)
+
         if expected_error_rate < 0.01:
             break
 
@@ -130,11 +141,16 @@ result_matrix = calc_result_matrix(lang_vectors)
 cluster = cluster_languages(lang_vectors, result_matrix)
 
 for g in cluster:
-    print('-------------')
+    if len(g) == 1:
+        g[0]
+        # good, identification for those languages is over
+        pass
+    else:
+        # no
+        pass
     for l in g:
         s = sum(lang_scr_cnt[l].values())
         m = max(lang_scr_cnt[l].items(), key=lambda x: x[1])
-        print(l, m[0], m[1]/s)
 
 
 
