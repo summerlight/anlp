@@ -21,6 +21,12 @@ def iter_words(doc):
             yield lang, word
 
 
+def iter_words_by_st(doc):
+    for lang, segment in iter_segment(doc):
+        for st in segmentation.by_sentences(segment):
+            yield lang, (word for word in segmentation.by_words(st))
+
+
 def iter_chars(doc):
     for lang, segment in iter_segment(doc):
         for ch in segment:
@@ -40,4 +46,6 @@ def tagged_words(doc):
 def read_dataset(name):
     for file_path in glob.glob('../data/{}/*.txt'.format(name)):
         with open(file_path, 'rt') as f:
-            yield json.load(f)
+            val = json.load(f)
+            val['file_path'] = file_path
+            yield val
