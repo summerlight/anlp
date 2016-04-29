@@ -4,8 +4,9 @@ import random
 import json
 import os.path
 import itertools
+import bisect
 import segmentation
-from collections import defaultdict
+from collections import defaultdict, Sequence
 
 '''
 - Multilingual document format
@@ -121,8 +122,9 @@ def combine_half_by_half(doc_tuple):
     }
 
 
+# sampling
 def random_combinations(cnt, lang_cnt):
-    def generate_combinations(langs):
+    def generator(langs):
         seen = set()
         for _ in range(cnt):
             while True:
@@ -131,7 +133,47 @@ def random_combinations(cnt, lang_cnt):
                     seen.add(sampled)
                     yield sampled
                     break
-    return generate_combinations
+    return generator
+
+
+# weight over minor languages
+def weighted_combinations(cnt, lang_cnt):
+    lang_cnt_dict = defaultdict(int)
+
+    class InvertedPopulation(Sequence):
+        def __init__(self, lang):
+            total = sum(lang_cnt_dict[i] + 1 for i in lang)
+            #avg = total / len(lang)
+            weights = (int(total / (lang_cnt_dict[i] + 1)) for i in lang)
+
+            self.pop = list(lang)
+            self.weights = list(itertools.accumulate(weights))
+
+        def __len__(self):
+            return self.weights[-1]
+
+        def __getitem__(self, i):
+            if not 0 <= i < len(self):
+                raise IndexError(i)
+            return self.pop[bisect.bisect(self.weights, i)]
+
+    def generator(langs):
+        seen = set()
+        weighted_pop = InvertedPopulation(langs)
+
+        for _ in range(cnt):
+            while True:
+                sampled = tuple(random.sample(weighted_pop, lang_cnt))
+                if sampled in seen or len(set(sampled)) != lang_cnt:
+                    continue
+                seen.add(sampled)
+                for l in sampled:
+                    lang_cnt_dict[l] += 1
+                yield sampled
+                break
+        print(lang_cnt_dict)
+
+    return generator
 
 
 def combine_sentences(doc_tuple):
@@ -198,7 +240,7 @@ if __name__ == '__main__':
     location_infos = refine_candidates(location_infos)
     generator = generate_documents(location_infos,
                                    input_dir,
-                                   random_combinations(10, 3),
+                                   weighted_combinations(10, 3),
                                    combine_sentences)
 
     for idx, doc in itertools.islice(enumerate(generator), args.doc_count):
