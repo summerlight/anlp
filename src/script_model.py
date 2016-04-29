@@ -9,16 +9,146 @@ import vector
 from data_gen import segmentation
 
 
-def extract_sentences(data, group):
-    for doc in data:
-        for l, st in dataset.iter_sentences(doc):
-            if l in group:
-                yield l, st
+def default_int():
+    return defaultdict(int)
 
-def extract_all_sentences(data):
-    for doc in data:
-        for l, st in dataset.iter_sentences(doc):
-            yield l, st
+
+class ScriptLangID:
+    def __init__(self):
+        self.scripts = set()
+        self.sorted_scripts = []
+        self.scripts_per_lang = defaultdict(default_int)
+        self.lang_vectors = {}
+
+    def train(self, data):
+        self.collect_stats(data)
+        self.lang_vectors = \
+            {l: vector.NPVector.fromdist(dist, self.sorted_scripts) \
+                for l, dist in self.scripts_per_lang.items()}
+
+    def identify(self, word):
+        return self.most_similar(word)[0]
+
+    def identify_many(self, data):
+        return [(self.most_similar(word)[0], word) for word in data]
+
+    def collect_stats(self, data):
+        for lang, sentence in data:
+            for ch in sentence:
+                scr = script_map.script(ch)
+
+                self.scripts.add(scr)
+                self.scripts_per_lang[lang][scr] += 1
+
+        self.sorted_scripts = sorted(self.scripts)
+
+    def most_similar(self, st):
+        vec = self.build_vector(st)
+        cosine_gen = ((l2, vec.cosine(vec2)) \
+                      for l2, vec2 in self.lang_vectors.items())
+        max_kv = sorted(cosine_gen, key=lambda x: x[1], reverse=True)
+        return max_kv[0]
+
+    def build_vector(self, st):
+        dist = defaultdict(int)
+        for scr in script_map.script_str(st):
+            dist[scr] += 1
+        return vector.NPVector.fromdist(dist, self.sorted_scripts)
+
+
+class WordLangID:
+    def __init__(self, entropy_constant):
+        self.substr_lang = defaultdict(default_int)
+        self.lang_substr = defaultdict(default_int)
+        self.ent_const = entropy_constant
+        self.entropies = {}
+        self.lang_vectors = {}
+
+    def train(self, data):
+        self.collect_stats(data)
+        self.entropies, self.lang_vectors = build_lang_vectors( \
+            self.substr_lang, self.lang_substr, self.ent_const)
+
+    def identify(self, word):
+        return self.most_similar(word)[0]
+
+    def identify_many(self, data):
+        return [(self.most_similar(word)[0], word) for word in data]
+
+    def collect_stats(self, data):
+        for l, word in data:
+            for s in substrings(word):
+                self.substr_lang[s][l] += 1
+                self.lang_substr[l][s] += 1
+
+    def most_similar(self, word):
+        vec = self.build_vector(word)
+        cosine_gen = ((l2, vec.cosine(vec2)) \
+                      for l2, vec2 in self.lang_vectors.items())
+        max_kv = sorted(cosine_gen, key=lambda x: x[1], reverse=True)
+        return max_kv[0]
+
+    def build_vector(self, word):
+        dist = defaultdict(int)
+        for s in substrings(word):
+            dist[s] += 1
+        return vector.SparseVector(entropy_map(self.entropies, dist))
+
+
+class SentenceLangID:
+    def __init__(self, entropy_constant, word_langid):
+        self.word_lang = defaultdict(default_int)
+        self.lang_word = defaultdict(default_int)
+        self.entropies = {}
+        self.ent_const = entropy_constant
+        self.lang_vectors = {}
+
+    def train(self, data):
+        self.collect_stats(data)
+        self.entropies, self.lang_vectors = build_lang_vectors( \
+            self.word_lang, self.lang_word, self.ent_const)
+
+    def identify(self, st):
+        return self.most_similar(st)[0]
+
+    def identify_many(self, data):
+        return [(self.most_similar(st)[0], st) for st in data]
+
+    def collect_stats(self, train):
+        for l, word in iterate_words_st(train):
+            self.word_lang[word][l] += 1
+            self.lang_word[l][word] += 1
+
+    def most_similar(self, st):
+        d = defaultdict(float)
+        for w in segmentation.by_words(st):
+            if script_map.script(w[0]) == 'Common':
+                continue
+            if w not in self.word_lang:
+                # TODO : use word identifier
+                continue
+            for k, v in self.word_lang[w].items():
+                d[k] += v / self.entropies.get(w, 1)
+
+        if len(d) == 0:
+            #print('wtf')
+            return ' ', 0.0
+
+        return max(d.items(), key=lambda x: x[1])
+
+    #def build_vector(self, word):
+    #    dist = defaultdict(int)
+    #    for s in substrings(word):
+    #        dist[s] += 1
+    #    return vector.SparseVector(entropy_map(self.entropies, dist))
+
+
+def build_lang_vectors(item_lang, lang_item, constant):
+    entropies = {i: entropy(l.values()) + constant \
+                 for i, l in item_lang.items()}
+    lang_vectors = {l: vector.SparseVector(entropy_map(entropies, dist)) \
+                    for l, dist in lang_item.items()}
+    return entropies, lang_vectors
 
 
 def load_dataset():
@@ -29,6 +159,21 @@ def load_dataset():
     test = list(extract_all_sentences(data[18000:]))
 
     return train, dev, test
+
+
+def save_model(cluster, script_id, st_langid_map):
+    with open('script_model.pkl', 'wb') as f:
+        pickle.dump(cluster, f)
+        pickle.dump(script_id, f)
+        pickle.dump(st_langid_map, f)
+
+
+def load_model():
+    with open('script_model.pkl', 'rb') as f:
+        cluster = pickle.load(f)
+        script_id = pickle.load(f)
+        st_langid_map = pickle.load(f)
+        return cluster, script_id
 
 
 def entropy(seq):
@@ -69,11 +214,16 @@ def iterate_words_st(sentences):
             yield l, word
 
 
-def find_most_similar(vec1, lang_vectors):
-    cosine_gen = ((l2, vec1.cosine(vec2)) \
-                  for l2, vec2 in lang_vectors.items())
-    max_kv = max(cosine_gen, key=lambda x: x[1])
-    return max_kv
+def extract_sentences(data, group):
+    for doc in data:
+        for l, st in dataset.iter_sentences(doc):
+            if l in group:
+                yield l, st
+
+def extract_all_sentences(data):
+    for doc in data:
+        for l, st in dataset.iter_sentences(doc):
+            yield l, st
 
 
 # calculate lang to lang matrix
@@ -88,20 +238,13 @@ def build_similarity_matrix(lang_vectors):
     return lang_similarity
 
 
-def estimate_language(seq, lang_vectors, vec_ctor):
-    dist = defaultdict(int)
-    for item in seq:
-        dist[item] += 1
-    vec = vec_ctor(dist)
-    return find_most_similar(vec, lang_vectors)
-
-
-def build_result_matrix(data, identifier):
+def build_result_matrix(actual, result):
     result_matrix = defaultdict(lambda: defaultdict(int))
     correct = 0
     total = 0
-    for l1, unit in data:
-        l2, similarity = identifier(unit)
+    for i1, i2 in zip(actual, result):
+        l1, _ = i1
+        l2, _ = i2
         result_matrix[l1][l2] += 1
         total += 1
         if l1 == l2:
@@ -185,166 +328,6 @@ def print_script_cluster(cluster, lang_scr_cnt):
             print('{}\t{}'.format(l, m[0]))
 
 
-def save_model(cluster, lang_vectors, scripts):
-    with open('script_model.pkl', 'wb') as f:
-        pickle.dump(cluster, f)
-        pickle.dump(lang_vectors, f)
-        pickle.dump(scripts, f)
-
-
-def load_model():
-    with open('script_model.pkl', 'rb') as f:
-        cluster = pickle.load(f)
-        lang_vectors = pickle.load(f)
-        scripts = pickle.load(f)
-        return cluster, lang_vectors, scripts
-
-
-def train():
-    train, dev, test = load_dataset()
-    cluster, lang_vectors, scripts = train_script_level(train)
-    #print_script_cluster(cluster, lang_vectors, scripts)
-
-    #for g in cluster:
-    #    if len(g) == 1:
-    #        # don't need to go into furthermore
-    #        continue
-    #
-    #    entropies, lang_vectors = train_word_level(g, train)
-    #    # TODO: train_sentence
-
-    save_model(cluster, lang_vectors, scripts)
-
-
-def train_script_level(data):
-    # count no. of scripts and scripts chars
-    scripts, scripts_per_lang = script_level_statistics(data)
-    vec_ctor = vector.NPVector.constructor(scripts)
-
-    # calculate a vector for each language
-    lang_vectors = {l: vec_ctor(dist) \
-                    for l, dist in scripts_per_lang.items()}
-
-    # calculate confusion matrix
-    result_matrix = build_result_matrix(data, lambda st:
-        estimate_language(script_map.script_str(st), lang_vectors, vec_ctor))
-
-    # using confusion matrix, cluster languages
-    cluster = cluster_languages(lang_vectors, result_matrix, 0.98)
-
-    return cluster, lang_vectors, scripts
-
-
-def script_level_statistics(data):
-    scripts = set()
-    lang_scr_cnt = defaultdict(lambda: defaultdict(int))
-
-    for lang, sentence in data:
-        for ch in sentence:
-            scr = script_map.script(ch)
-
-            scripts.add(scr)
-            lang_scr_cnt[lang][scr] += 1
-
-    return sorted(scripts), lang_scr_cnt
-
-
-
-def train_sentence_level(train, dev):
-    word_lang, lang_word = word_level_statstics(train)
-    entropies, lang_vectors = build_lang_vectors(word_lang, lang_word, 0.001)
-
-    def find_most_similar(st):
-        d = defaultdict(float)
-        for w in st:
-            if script_map.script(w[0]) == 'Common':
-                continue
-            if w not in word_lang:
-                # TODO : use word identifier
-                continue
-            for k, v in word_lang[w].items():
-                d[k] += v / entropies.get(w, 1)
-
-        if len(d) == 0:
-            #print('wtf')
-            return ' ', 0.0
-
-        return max(d.items(), key=lambda x: x[1])
-
-    def iterate(data):
-        for l, st in data:
-            yield l, segmentation.by_words(st)
-
-    result_matrix = build_result_matrix(iterate(dev), find_most_similar)
-    print_result_matrix(result_matrix)
-
-    #for k in total.keys():
-    #    if correct[k] / total[k] < 0.9:
-    #        print(result_matrix[k])
-    #    print(k, correct[k], total[k], correct[k] / total[k])
-
-    return entropies, lang_vectors
-
-
-
-def word_level_statstics(train):
-    word_lang = defaultdict(lambda: defaultdict(int))
-    lang_word = defaultdict(lambda: defaultdict(int))
-
-    for l, word in iterate_words_st(train):
-        word_lang[word][l] += 1
-        lang_word[l][word] += 1
-
-    return word_lang, lang_word
-
-
-def build_lang_vectors(item_lang, lang_item, constant):
-    entropies = {i: entropy(l.values()) + constant \
-                 for i, l in item_lang.items()}
-    lang_vectors = {l: vector.SparseVector(entropy_map(entropies, dist)) \
-                    for l, dist in lang_item.items()}
-    return entropies, lang_vectors
-
-
-def train_word_level(train):
-    substr_lang, lang_substr = char_level_statistics(train)
-    entropies, lang_vectors = build_lang_vectors(substr_lang, lang_substr, 0.1)
-
-    return entropies, lang_vectors
-
-
-def char_level_statistics(train):
-    substr_lang = defaultdict(lambda: defaultdict(int))
-    lang_substr = defaultdict(lambda: defaultdict(int))
-
-    for l, word in iterate_words_st(train):
-        for s in substrings(word):
-            substr_lang[s][l] += 1
-            lang_substr[l][s] += 1
-
-    return substr_lang, lang_substr
-
-
-def doit3(train, dev):
-    entropies, lang_vectors = train_word_level(train)
-
-    def build_vector(w):
-        dist = defaultdict(int)
-        for s in substrings(w):
-            dist[s] += 1
-        return vector.SparseVector(entropy_map(entropies, dist))
-
-    def find_most_similar(w):
-        vec = build_vector(w)
-        cosine_gen = ((l2, vec.cosine(vec2)) \
-                      for l2, vec2 in lang_vectors.items())
-        max_kv = sorted(cosine_gen, key=lambda x: x[1], reverse=True)
-        return max_kv[0]
-
-    result_matrix = build_result_matrix( \
-        iterate_words_st(dev), find_most_similar)
-
-
 def split_data_by_group(data, cluster):
     group_map = {}
     for g in cluster:
@@ -358,9 +341,45 @@ def split_data_by_group(data, cluster):
     return split_data
 
 
+def train():
+    train, dev, test = load_dataset()
+
+    script_id = ScriptLangID()
+    script_id.train(data)
+
+    # calculate confusion matrix
+    result = script_id.identify_many(st for l, st in data)
+    result_matrix = build_result_matrix(data, result)
+
+    # using confusion matrix, cluster languages
+    cluster = cluster_languages(script_id.lang_vectors, result_matrix, 0.98)
+
+    st_langid_map = {}
+    split_train = split_data_by_group(train, cluster)
+    #split_dev = split_data_by_group(dev, cluster)
+
+    for g in cluster:
+        if len(g) == 1:
+            # don't need to go into furthermore
+            continue
+
+        t = split_train[g]
+        #d = split_dev[g]
+
+        word_langid = WordLangID(0.1)
+        word_langid.train(iterate_words_st(t))
+
+        st_langid = SentenceLangID(0.001, word_langid)
+        st_langid.train(t)
+
+        st_langid_map[g] = st_langid
+
+    save_model(cluster, script_id, st_langid_map)
+
+
 def classify():
     train, dev, test = load_dataset()
-    cluster, lang_vectors, scripts = load_model()
+    cluster, script_id, st_langid_map = load_model()
     split_train = split_data_by_group(train, cluster)
     split_dev = split_data_by_group(dev, cluster)
     for g in cluster:
@@ -370,18 +389,21 @@ def classify():
             # identification is finished here for those languages
             # TODO: tag it
             continue
-        print(g)
-        #entropies, lang_vectors = train_word_level(t)
-        #
-        doit3(t, d)
-        #train_sentence_level(t, d)
 
-        #print(g, len(st))
+        word_langid = WordLangID(0.1)
+        word_langid.train(iterate_words_st(t))
+        result = word_langid.identify_many(w for l, w in iterate_words_st(d))
+        st_result_matrix = build_result_matrix(iterate_words_st(d), result)
+
+        st_langid = SentenceLangID(0.001, word_langid)
+        st_langid.train(t)
+        result = st_langid.identify_many(st for _, st in d)
+        st_result_matrix = build_result_matrix(d, result)
 
 
 if __name__ == '__main__':
-    train()
-    #classify()
+    #train()
+    classify()
 
 
 '''
