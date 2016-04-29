@@ -70,10 +70,13 @@ class WordLangID:
             self.substr_lang, self.lang_substr, self.ent_const)
 
     def identify(self, word):
-        return self.most_similar(word)[0]
+        return self.most_similar(word)[0][0]
 
     def identify_many(self, data):
-        return [(self.most_similar(word)[0], word) for word in data]
+        return [(self.most_similar(word)[0][0], word) for word in data]
+
+    def identify_detail(self, word):
+        return self.most_similar(word)[:5]
 
     def collect_stats(self, data):
         for l, word in data:
@@ -86,7 +89,7 @@ class WordLangID:
         cosine_gen = ((l2, vec.cosine(vec2)) \
                       for l2, vec2 in self.lang_vectors.items())
         max_kv = sorted(cosine_gen, key=lambda x: x[1], reverse=True)
-        return max_kv[0]
+        return max_kv
 
     def build_vector(self, word):
         dist = defaultdict(int)
@@ -97,6 +100,7 @@ class WordLangID:
 
 class SentenceLangID:
     def __init__(self, entropy_constant, word_langid):
+        self.word_langid = word_langid
         self.word_lang = defaultdict(default_int)
         self.lang_word = defaultdict(default_int)
         self.entropies = {}
@@ -125,16 +129,29 @@ class SentenceLangID:
             if script_map.script(w[0]) == 'Common':
                 continue
             if w not in self.word_lang:
+                for k, v in self.unknown_word_score(w):
+                    pass
+                #    d[k] += v
                 # TODO : use word identifier
                 continue
             for k, v in self.word_lang[w].items():
                 d[k] += v / self.entropies.get(w, 1)
 
         if len(d) == 0:
-            #print('wtf')
             return ' ', 0.0
 
         return max(d.items(), key=lambda x: x[1])
+
+    def unknown_word_score(self, w):
+        result = self.word_langid.identify_detail(w)
+        entropy_val = entropy(i[1] for i in result if i[1] > 0)
+        s = sum(i[1] for i in result) * 0.2
+
+        for i in result:
+            if i[1] > 0:
+                #print(i[0], i[1] / (s*(entropy_val + 0.01)))
+                yield i[0], i[1] / s*(entropy_val + 0.01)
+
 
     #def build_vector(self, word):
     #    dist = defaultdict(int)
@@ -173,7 +190,7 @@ def load_model():
         cluster = pickle.load(f)
         script_id = pickle.load(f)
         st_langid_map = pickle.load(f)
-        return cluster, script_id
+        return cluster, script_id, st_langid_map
 
 
 def entropy(seq):
@@ -199,13 +216,6 @@ def substrings(word):
             yield padded[i:j]
 
 
-def iterate_words(data, group):
-    for doc in data:
-        for l, word in dataset.iter_words(doc):
-            if l not in group or script_map.script(word[0]) == 'Common':
-                continue
-            yield l, word
-
 def iterate_words_st(sentences):
     for l, st in sentences:
         for word in segmentation.by_words(st):
@@ -213,12 +223,6 @@ def iterate_words_st(sentences):
                 continue
             yield l, word
 
-
-def extract_sentences(data, group):
-    for doc in data:
-        for l, st in dataset.iter_sentences(doc):
-            if l in group:
-                yield l, st
 
 def extract_all_sentences(data):
     for doc in data:
@@ -342,14 +346,14 @@ def split_data_by_group(data, cluster):
 
 
 def train():
-    train, dev, test = load_dataset()
+    train, dev, _ = load_dataset()
 
     script_id = ScriptLangID()
-    script_id.train(data)
+    script_id.train(train)
 
     # calculate confusion matrix
-    result = script_id.identify_many(st for l, st in data)
-    result_matrix = build_result_matrix(data, result)
+    result = script_id.identify_many(st for l, st in train)
+    result_matrix = build_result_matrix(train, result)
 
     # using confusion matrix, cluster languages
     cluster = cluster_languages(script_id.lang_vectors, result_matrix, 0.98)
@@ -378,25 +382,18 @@ def train():
 
 
 def classify():
-    train, dev, test = load_dataset()
+    _, dev, _ = load_dataset()
     cluster, script_id, st_langid_map = load_model()
-    split_train = split_data_by_group(train, cluster)
     split_dev = split_data_by_group(dev, cluster)
     for g in cluster:
-        t = split_train[g]
-        d = split_dev[g]
         if len(g) == 1:
             # identification is finished here for those languages
             # TODO: tag it
             continue
 
-        word_langid = WordLangID(0.1)
-        word_langid.train(iterate_words_st(t))
-        result = word_langid.identify_many(w for l, w in iterate_words_st(d))
-        st_result_matrix = build_result_matrix(iterate_words_st(d), result)
+        d = split_dev[g]
+        st_langid = st_langid_map[g]
 
-        st_langid = SentenceLangID(0.001, word_langid)
-        st_langid.train(t)
         result = st_langid.identify_many(st for _, st in d)
         st_result_matrix = build_result_matrix(d, result)
 
@@ -404,93 +401,3 @@ def classify():
 if __name__ == '__main__':
     #train()
     classify()
-
-
-'''
-# document classification
-for doc in dev:
-    for l1, sentence in dataset.iter_sentences(doc):
-        dist = defaultdict(int)
-        for scr in script_map.script_str(sentence):
-            dist[scr] += 1
-        vec = dist_to_vector(dist, scripts)
-
-        l2, similarity = find_most_similar(vec1)
-
-
-def doit_(group, data, name):
-    word_cnt = defaultdict(lambda: defaultdict(int))
-    for doc in data:
-        for l, word in dataset.iter_words(doc):
-            if l not in group or script_map.script(word[0]) == 'Common':
-                continue
-            word_cnt[word][l] += 1
-
-    dist = defaultdict(int)
-    dist2 = defaultdict(int)
-    for w, langs in word_cnt.items():
-        dist[len(langs)] += 1
-        dist2[frozenset(langs)] += 1
-
-    print(sorted(dist.items(), key=lambda x:x[0]))
-    print(sorted(dist2.items(), key=lambda x:x[1]))
-
-
-def doit4(group, data, dev):
-    a = defaultdict(int)
-    b = defaultdict(lambda: defaultdict(int))
-    c = defaultdict(lambda: defaultdict(int))
-    train_words = [(l, w) for l, w in words_(data, group)]
-    test_words = [(l, w) for l, w in words_(dev, group)]
-    for l, w in train_words:
-        for s in substrings(w):
-            a[s] += 1
-            b[l][s] += 1
-            c[s][l] += 1
-
-    def entropy_map(dist):
-        #return dist
-        return {k: v / entropies.get(k, 1) for k, v in dist.items()}
-
-    entropies = {w: entropy(l.values())+0.01 for w, l in c.items()}
-
-    train_set = []
-    test_set = []
-
-    for l, w in train_words:
-        dist = defaultdict(int)
-        for s in substrings(w):
-            dist[s] += 1
-        train_set.append((dist, l))
-    for l, w in test_words:
-        dist = defaultdict(int)
-        for s in substrings(w):
-            dist[s] += 1
-        test_set.append(dist)
-
-    classifier = MaxentClassifier.train(train_set)
-    result = classifier.classify_many(test_set)
-    correct = 0
-    total = 0
-    for i, j in zip(result, test_words):
-        if i == j[0]:
-            correct += 1
-        total += 1
-    print(correct, total, correct/total)
-
-    #for pdist in classifier.prob_classify_many(test):
-    #    print('%.4f %.4f' % (pdist.prob('x'), pdist.prob('y')))
-    #print(train_set[0], test_set[0])
-
-'''
-
-def classify_documents(lang_vectors, data, scripts, cluster):
-    result = defaultdict(list)
-    for doc in data:
-        for l1, sentence in dataset.iter_sentences(doc):
-            # TODO: sometime multilingual sentence come up,
-            #       maybe fallback method for low similarity doc can be used?
-            l2, _ = estimate_language(sentence, lang_vectors, scripts)
-            group = next(g for g in cluster if l2 in g)
-            result[group].append((l1, sentence))
-    return result
