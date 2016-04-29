@@ -66,8 +66,12 @@ class WordLangID:
 
     def train(self, data):
         self.collect_stats(data)
-        self.entropies, self.lang_vectors = build_lang_vectors( \
-            self.substr_lang, self.lang_substr, self.ent_const)
+        self.entropies = {i: entropy(l.values()) + self.ent_const \
+                          for i, l in self.substr_lang.items()}
+        self.lang_vectors = { \
+            l: vector.SparseVector(entropy_map(self.entropies, dist)) \
+            for l, dist in self.lang_substr.items() \
+        }
 
     def identify(self, word):
         return self.most_similar(word)[0][0]
@@ -109,8 +113,12 @@ class SentenceLangID:
 
     def train(self, data):
         self.collect_stats(data)
-        self.entropies, self.lang_vectors = build_lang_vectors( \
-            self.word_lang, self.lang_word, self.ent_const)
+        self.entropies = {i: entropy(l.values()) + self.ent_const \
+                          for i, l in self.word_lang.items()}
+        self.lang_vectors = { \
+            l: vector.SparseVector(entropy_map(entropies, dist)) \
+            for l, dist in self.lang_word.items() \
+        }
 
     def identify(self, st):
         return self.most_similar(st)[0]
@@ -130,9 +138,8 @@ class SentenceLangID:
                 continue
             if w not in self.word_lang:
                 for k, v in self.unknown_word_score(w):
-                    pass
-                #    d[k] += v
-                # TODO : use word identifier
+                #    pass
+                    d[k] += v
                 continue
             for k, v in self.word_lang[w].items():
                 d[k] += v / self.entropies.get(w, 1)
@@ -396,6 +403,7 @@ def classify():
 
         result = st_langid.identify_many(st for _, st in d)
         st_result_matrix = build_result_matrix(d, result)
+        print_result_matrix(st_result_matrix)
 
 
 if __name__ == '__main__':

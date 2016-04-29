@@ -21,6 +21,12 @@ def iter_words(doc):
             yield lang, word
 
 
+def iter_words_from_st(st):
+    for lang, segment in iter_segment(doc):
+        for word in segmentation.by_words(st):
+            yield lang, word
+
+
 def iter_words_by_st(doc):
     for lang, segment in iter_segment(doc):
         for st in segmentation.by_sentences(segment):
