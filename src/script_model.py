@@ -6,13 +6,28 @@ import itertools
 from math import log, sqrt
 from collections import defaultdict
 import vector
+from data_gen import segmentation
+
+
+def extract_sentences(data, group):
+    for doc in data:
+        for l, st in dataset.iter_sentences(doc):
+            if l in group:
+                yield l, st
+
+def extract_all_sentences(data):
+    for doc in data:
+        for l, st in dataset.iter_sentences(doc):
+            yield l, st
 
 
 def load_dataset():
     data = list(dataset.read_dataset('weighted'))
-    train = data[:16000]
-    dev = data[16000:18000]
-    test = data[18000:]
+
+    train = list(extract_all_sentences(data[:16000]))
+    dev = list(extract_all_sentences(data[16000:18000]))
+    test = list(extract_all_sentences(data[18000:]))
+
     return train, dev, test
 
 
@@ -43,6 +58,13 @@ def iterate_words(data, group):
     for doc in data:
         for l, word in dataset.iter_words(doc):
             if l not in group or script_map.script(word[0]) == 'Common':
+                continue
+            yield l, word
+
+def iterate_words_st(sentences):
+    for l, st in sentences:
+        for word in segmentation.by_words(st):
+            if script_map.script(word[0]) == 'Common':
                 continue
             yield l, word
 
@@ -78,15 +100,26 @@ def build_result_matrix(data, identifier):
     result_matrix = defaultdict(lambda: defaultdict(int))
     correct = 0
     total = 0
-    for doc in data:
-        for l1, sentence in dataset.iter_sentences(doc):
-            l2, similarity = identifier(sentence)
-            result_matrix[l1][l2] += 1
-            total += 1
-            if l1 == l2:
-                correct += 1
+    for l1, unit in data:
+        l2, similarity = identifier(unit)
+        result_matrix[l1][l2] += 1
+        total += 1
+        if l1 == l2:
+            correct += 1
     print(correct/total)
     return result_matrix
+
+
+def print_result_matrix(matrix):
+    langs = sorted(matrix.keys())
+    for l1 in langs:
+        dist = matrix[l1]
+        total = sum(dist.values())
+        correct = dist[l1]
+        accuracy = correct / total
+        print(l1, accuracy)
+        if accuracy < 0.9:
+            print(sorted(dist.items(), key=lambda x: x[1], reverse=True)[:5])
 
 
 def calc_expected_error_rate(groups, result_matrix):
@@ -136,7 +169,7 @@ def cluster_languages(lang_vectors, result_matrix, threshold):
         expected_error_rate = \
             calc_expected_error_rate(group_map, result_matrix)
 
-        #print(lang_similarity[l1][l2], expected_error_rate)
+        print(lang_similarity[l1][l2], expected_error_rate)
         if expected_error_rate < 0.01:
             break
 
@@ -206,43 +239,44 @@ def script_level_statistics(data):
     scripts = set()
     lang_scr_cnt = defaultdict(lambda: defaultdict(int))
 
-    for doc in data:
-        for lang, sentence in dataset.iter_sentences(doc):
-            for ch in sentence:
-                scr = script_map.script(ch)
+    for lang, sentence in data:
+        for ch in sentence:
+            scr = script_map.script(ch)
 
-                scripts.add(scr)
-                lang_scr_cnt[lang][scr] += 1
+            scripts.add(scr)
+            lang_scr_cnt[lang][scr] += 1
 
     return sorted(scripts), lang_scr_cnt
 
 
 
-def train_sentence_level(group, train, dev):
-    word_lang, lang_word = word_level_statstics(group, train)
+def train_sentence_level(train, dev):
+    word_lang, lang_word = word_level_statstics(train)
     entropies, lang_vectors = build_lang_vectors(word_lang, lang_word, 0.001)
 
     def find_most_similar(st):
         d = defaultdict(float)
         for w in st:
-            if script_map.script(w[0]) == 'Common' or w not in word_lang:
+            if script_map.script(w[0]) == 'Common':
+                continue
+            if w not in word_lang:
+                # TODO : use word identifier
                 continue
             for k, v in word_lang[w].items():
                 d[k] += v / entropies.get(w, 1)
-        # TODO : use word identifier
+
         if len(d) == 0:
-            return group[0], 0.0
+            #print('wtf')
+            return ' ', 0.0
 
-        return max(d.items(), key=lambda x: x[1])[0]
+        return max(d.items(), key=lambda x: x[1])
 
-    def iterate():
-        for doc in train:
-            for l, st in dataset.iter_words_by_st(doc):
-                if l not in group:
-                    continue
-                yield st
+    def iterate(data):
+        for l, st in data:
+            yield l, segmentation.by_words(st)
 
-    result_matrix = build_result_matrix(iterate, find_most_similar)
+    result_matrix = build_result_matrix(iterate(dev), find_most_similar)
+    print_result_matrix(result_matrix)
 
     #for k in total.keys():
     #    if correct[k] / total[k] < 0.9:
@@ -251,17 +285,13 @@ def train_sentence_level(group, train, dev):
 
     return entropies, lang_vectors
 
-    #print(correct, total, correct / total)
-
-    #pprint.pprint(sorted(entropies.items(), key=lambda x:x[1], reverse=True)[:100])
-    #pprint.pprint(sorted(entropies.items(), key=lambda x:x[1], reverse=True)[100:])
 
 
-def word_level_statstics(train, group):
+def word_level_statstics(train):
     word_lang = defaultdict(lambda: defaultdict(int))
     lang_word = defaultdict(lambda: defaultdict(int))
 
-    for l, word in iterate_words(train, group):
+    for l, word in iterate_words_st(train):
         word_lang[word][l] += 1
         lang_word[l][word] += 1
 
@@ -276,18 +306,18 @@ def build_lang_vectors(item_lang, lang_item, constant):
     return entropies, lang_vectors
 
 
-def train_word_level(group, train):
-    substr_lang, lang_substr = char_level_statistics(train, group)
+def train_word_level(train):
+    substr_lang, lang_substr = char_level_statistics(train)
     entropies, lang_vectors = build_lang_vectors(substr_lang, lang_substr, 0.1)
 
     return entropies, lang_vectors
 
 
-def char_level_statistics(train, group):
+def char_level_statistics(train):
     substr_lang = defaultdict(lambda: defaultdict(int))
     lang_substr = defaultdict(lambda: defaultdict(int))
 
-    for l, word in iterate_words(train, group):
+    for l, word in iterate_words_st(train):
         for s in substrings(word):
             substr_lang[s][l] += 1
             lang_substr[l][s] += 1
@@ -295,14 +325,12 @@ def char_level_statistics(train, group):
     return substr_lang, lang_substr
 
 
-def doit3(group, train, dev):
-    entropies, lang_vectors = train_word_level(group, train)
-    correct = 0
-    total = 0
+def doit3(train, dev):
+    entropies, lang_vectors = train_word_level(train)
 
     def build_vector(w):
         dist = defaultdict(int)
-        for s in substrings(word):
+        for s in substrings(w):
             dist[s] += 1
         return vector.SparseVector(entropy_map(entropies, dist))
 
@@ -314,35 +342,46 @@ def doit3(group, train, dev):
         return max_kv[0]
 
     result_matrix = build_result_matrix( \
-        iterate_words(dev, group), find_most_similar)
+        iterate_words_st(dev), find_most_similar)
+
+
+def split_data_by_group(data, cluster):
+    group_map = {}
+    for g in cluster:
+        for l in g:
+            group_map[l] = g
+
+    split_data = defaultdict(list)
+    for l, st in data:
+        g = group_map[l]
+        split_data[g].append((l, st))
+    return split_data
 
 
 def classify():
     train, dev, test = load_dataset()
-
     cluster, lang_vectors, scripts = load_model()
-    #result = classify_documents(lang_vectors, dev, scripts, cluster)
+    split_train = split_data_by_group(train, cluster)
+    split_dev = split_data_by_group(dev, cluster)
     for g in cluster:
-        print(g)
+        t = split_train[g]
+        d = split_dev[g]
         if len(g) == 1:
             # identification is finished here for those languages
             # TODO: tag it
             continue
-
-        doit3(g, train, dev)
-
-        #if len(g) > 20:
-        #    train_sentence_level(g, train, dev)
-            #doit3(g, train, dev)
-            #doit_(g, train, 'train_word.txt')
-            #doit_(g, dev, 'train_dev.txt')
+        print(g)
+        #entropies, lang_vectors = train_word_level(t)
+        #
+        doit3(t, d)
+        #train_sentence_level(t, d)
 
         #print(g, len(st))
 
 
 if __name__ == '__main__':
-    #train()
-    classify()
+    train()
+    #classify()
 
 
 '''
@@ -422,10 +461,6 @@ def doit4(group, data, dev):
     #print(train_set[0], test_set[0])
 
 '''
-
-
-
-
 
 def classify_documents(lang_vectors, data, scripts, cluster):
     result = defaultdict(list)
