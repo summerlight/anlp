@@ -50,7 +50,7 @@ def tagged_words(doc):
 
 
 def read_dataset(name):
-    for file_path in glob.glob('../data/{}/*.txt'.format(name)):
+    for file_path in sorted(glob.glob('../data/{}/*.txt'.format(name))):
         with open(file_path, 'rt') as f:
             val = json.load(f)
             val['file_path'] = file_path

@@ -3,14 +3,18 @@ import pprint
 import script_map
 import pickle
 import itertools
+import argparse
 from math import log, sqrt
 from collections import defaultdict
 import vector
 from data_gen import segmentation
 
-
 def default_int():
     return defaultdict(int)
+
+
+word_entropy_coefficient = 0.1
+sentence_entropy_coefficient = 0.001
 
 
 class ScriptLangID:
@@ -116,7 +120,7 @@ class SentenceLangID:
         self.entropies = {i: entropy(l.values()) + self.ent_const \
                           for i, l in self.word_lang.items()}
         self.lang_vectors = { \
-            l: vector.SparseVector(entropy_map(entropies, dist)) \
+            l: vector.SparseVector(entropy_map(self.entropies, dist)) \
             for l, dist in self.lang_word.items() \
         }
 
@@ -124,6 +128,7 @@ class SentenceLangID:
         return self.most_similar(st)[0]
 
     def identify_many(self, data):
+        a = sorted(self.entropies.items(), key=lambda x: x[1])
         return [(self.most_similar(st)[0], st) for st in data]
 
     def collect_stats(self, train):
@@ -142,7 +147,7 @@ class SentenceLangID:
                     d[k] += v
                 continue
             for k, v in self.word_lang[w].items():
-                d[k] += v / self.entropies.get(w, 1)
+                d[k] += v #/ self.entropies.get(w, 1)
 
         if len(d) == 0:
             return ' ', 0.0
@@ -156,23 +161,7 @@ class SentenceLangID:
 
         for i in result:
             if i[1] > 0:
-                #print(i[0], i[1] / (s*(entropy_val + 0.01)))
-                yield i[0], i[1] / s*(entropy_val + 0.01)
-
-
-    #def build_vector(self, word):
-    #    dist = defaultdict(int)
-    #    for s in substrings(word):
-    #        dist[s] += 1
-    #    return vector.SparseVector(entropy_map(self.entropies, dist))
-
-
-def build_lang_vectors(item_lang, lang_item, constant):
-    entropies = {i: entropy(l.values()) + constant \
-                 for i, l in item_lang.items()}
-    lang_vectors = {l: vector.SparseVector(entropy_map(entropies, dist)) \
-                    for l, dist in lang_item.items()}
-    return entropies, lang_vectors
+                yield i[0], i[1] #/ s*(entropy_val + 0.01)
 
 
 def load_dataset():
@@ -185,15 +174,15 @@ def load_dataset():
     return train, dev, test
 
 
-def save_model(cluster, script_id, st_langid_map):
-    with open('script_model.pkl', 'wb') as f:
+def save_model(file_path, cluster, script_id, st_langid_map):
+    with open(file_path, 'wb') as f:
         pickle.dump(cluster, f)
         pickle.dump(script_id, f)
         pickle.dump(st_langid_map, f)
 
 
-def load_model():
-    with open('script_model.pkl', 'rb') as f:
+def load_model(file_path):
+    with open(file_path, 'rb') as f:
         cluster = pickle.load(f)
         script_id = pickle.load(f)
         st_langid_map = pickle.load(f)
@@ -260,7 +249,7 @@ def build_result_matrix(actual, result):
         total += 1
         if l1 == l2:
             correct += 1
-    print(correct/total)
+    #print(correct/total)
     return result_matrix
 
 
@@ -323,20 +312,11 @@ def cluster_languages(lang_vectors, result_matrix, threshold):
         expected_error_rate = \
             calc_expected_error_rate(group_map, result_matrix)
 
-        print(lang_similarity[l1][l2], expected_error_rate)
+        #print(lang_similarity[l1][l2], expected_error_rate)
         if expected_error_rate < 0.01:
             break
 
     return tuple(group_vectors.keys())
-
-
-def print_script_cluster(cluster, lang_scr_cnt):
-    for g in cluster:
-        print('----------------')
-        for l in g:
-            s = sum(lang_scr_cnt[l].values())
-            m = max(lang_scr_cnt[l].items(), key=lambda x: x[1])
-            print('{}\t{}'.format(l, m[0]))
 
 
 def split_data_by_group(data, cluster):
@@ -352,60 +332,111 @@ def split_data_by_group(data, cluster):
     return split_data
 
 
-def train():
-    train, dev, _ = load_dataset()
-
+def train_data(model_path, data):
     script_id = ScriptLangID()
-    script_id.train(train)
+    script_id.train(data)
 
     # calculate confusion matrix
-    result = script_id.identify_many(st for l, st in train)
-    result_matrix = build_result_matrix(train, result)
+    result = script_id.identify_many(st for l, st in data)
+    result_matrix = build_result_matrix(data, result)
 
     # using confusion matrix, cluster languages
     cluster = cluster_languages(script_id.lang_vectors, result_matrix, 0.98)
 
     st_langid_map = {}
-    split_train = split_data_by_group(train, cluster)
-    #split_dev = split_data_by_group(dev, cluster)
+    split_data = split_data_by_group(data, cluster)
 
     for g in cluster:
         if len(g) == 1:
             # don't need to go into furthermore
             continue
 
-        t = split_train[g]
-        #d = split_dev[g]
+        t = split_data[g]
 
-        word_langid = WordLangID(0.1)
+        word_langid = WordLangID(word_entropy_coefficient)
         word_langid.train(iterate_words_st(t))
 
-        st_langid = SentenceLangID(0.001, word_langid)
+        st_langid = SentenceLangID(sentence_entropy_coefficient, word_langid)
         st_langid.train(t)
 
         st_langid_map[g] = st_langid
 
-    save_model(cluster, script_id, st_langid_map)
+    save_model(model_path, cluster, script_id, st_langid_map)
 
 
-def classify():
-    _, dev, _ = load_dataset()
-    cluster, script_id, st_langid_map = load_model()
-    split_dev = split_data_by_group(dev, cluster)
+def classify_data(model_path, data):
+    cluster, script_id, st_langid_map = load_model(model_path)
+    split_data = split_data_by_group(data, cluster)
+    id_result = {}
     for g in cluster:
-        if len(g) == 1:
-            # identification is finished here for those languages
-            # TODO: tag it
+        d = split_data[g]
+        if len(d) == 0:
+            # no sample due to sparse data
             continue
 
-        d = split_dev[g]
-        st_langid = st_langid_map[g]
+        if len(g) == 1:
+            # identification is finished here for those languages
+            l = next(iter(g))
+            correct = 0
+            total = 0
+            for l2, st in d:
+                if l == l2:
+                    correct += 1
+                total += 1
+            id_result[l] = (correct, total)
+        else:
+            st_langid = st_langid_map[g]
 
-        result = st_langid.identify_many(st for _, st in d)
-        st_result_matrix = build_result_matrix(d, result)
-        print_result_matrix(st_result_matrix)
+            result = st_langid.identify_many(st for _, st in d)
+            st_result_matrix = build_result_matrix(d, result)
+            for l, dist in st_result_matrix.items():
+                correct = dist[l]
+                total = sum(dist.values())
+                id_result[l] = (correct, total)
 
+        script_name = set(script_map.script_str(d[0][1]))
+        script_name.discard('Common')
+        script_name.discard('Inherited')
+
+        print('------ {} ------'.format(script_name))
+        for l in g:
+            correct, total = id_result.get(l, (0, 0))
+            if total > 0:
+                print(l, correct, total, correct/total)
+            else:
+                print(l, correct, total, 'N/A')
+        if len(g) > 1:
+            transposed = zip(*(id_result[l] for l in g if l in id_result))
+            correct, total = tuple(sum(x) for x in transposed)
+            print(script_name, correct, total, correct/total)
+
+        #print_result_matrix(st_result_matrix)
+
+    correct, total = tuple(sum(x) for x in zip(*id_result.values()))
+    print('Sum', correct, total, correct/total)
+
+def main():
+    parser = argparse.ArgumentParser(
+        description='Language identifier.')
+    parser.add_argument('--model', dest='model_path',
+                        default='model.pkl',
+                        help='a model file path')
+    parser.add_argument('--mode', dest='mode', choices=['train', 'classify'],
+                        help='train or classify')
+    parser.add_argument('--word_coeff', dest='wcoeff',
+                        type=float, help='word level entropy coefficient')
+    parser.add_argument('--st_coeff', dest='stcoeff',
+                        type=float, help='sentence level entropy coefficient')
+    args = parser.parse_args()
+
+    train, dev, test = load_dataset()
+    global word_entropy_coefficient, sentence_entropy_coefficient
+    word_entropy_coefficient = args.wcoeff
+    sentence_entropy_coefficient = args.stcoeff
+    if args.mode == 'train':
+        train_data(args.model_path, train)
+    else:
+        classify_data(args.model_path, test)
 
 if __name__ == '__main__':
-    #train()
-    classify()
+    main()
