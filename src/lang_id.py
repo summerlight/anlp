@@ -415,14 +415,45 @@ def classify_data(model_path, data):
     correct, total = tuple(sum(x) for x in zip(*id_result.values()))
     print('Sum', correct, total, correct/total)
 
+def classify_word(model_path, data):
+    cluster, script_id, st_langid_map = load_model(model_path)
+    split_data = split_data_by_group(data, cluster)
+    for g in cluster:
+        d = split_data[g]
+        if len(d) == 0:
+            # no sample due to sparse data
+            continue
+
+        if len(g) == 1:
+            continue
+
+        st_langid = st_langid_map[g]
+        word_langid = st_langid.word_langid
+
+        script_name = set(script_map.script_str(d[0][1]))
+        script_name.discard('Common')
+        script_name.discard('Inherited')
+
+        words = list(iterate_words_st(d))
+        result = word_langid.identify_many(w for _, w in words)
+        word_result_matrix = build_result_matrix(words, result)
+        correct = 0
+        total = 0
+        for l, dist in word_result_matrix.items():
+            correct += dist[l]
+            total += sum(dist.values())
+        print(script_name, correct, total, correct/total)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='Language identifier.')
     parser.add_argument('--model', dest='model_path',
                         default='model.pkl',
                         help='a model file path')
-    parser.add_argument('--mode', dest='mode', choices=['train', 'classify'],
-                        help='train or classify')
+    parser.add_argument('--mode', dest='mode',
+                        choices=['train', 'classify', 'word'],
+                        help='train, classify or word')
     parser.add_argument('--word_coeff', dest='wcoeff',
                         type=float, help='word level entropy coefficient')
     parser.add_argument('--st_coeff', dest='stcoeff',
@@ -435,8 +466,10 @@ def main():
     sentence_entropy_coefficient = args.stcoeff
     if args.mode == 'train':
         train_data(args.model_path, train)
-    else:
+    elif args.mode == 'classify':
         classify_data(args.model_path, test)
+    else:
+        classify_word(args.model_path, test)
 
 if __name__ == '__main__':
     main()
